@@ -1,0 +1,49 @@
+name: ufw
+version: '0.1.0.0'
+category: Web
+author: Rune K. Svendsen
+maintainer: runesvend@gmail.com
+copyright: 2018 Rune K. Svendsen
+license: BSD3
+github: runeksvendsen/ufw
+extra-source-files:
+- README.md
+
+library:
+  source-dirs: src
+  ghc-options:
+  - -Wall
+  exposed-modules:
+  - Data.UFW
+  dependencies:
+  - base >=4.7 && <5
+  - mtl
+  - vector
+  - lens
+  - array
+
+executables:
+  ufw:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - base
+    - ufw
+
+tests:
+  ufw-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - base
+    - ufw
+    - hspec
+    - QuickCheck
