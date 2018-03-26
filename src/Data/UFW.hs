@@ -34,13 +34,13 @@ runUFW n ufw = retVal
    where (retVal, _) = runState (unwrapUFW ufw) (mkUFW n)
 
 getCount :: UFW Int
-getCount = gets _count
+getCount = use count
 
 find :: Int -> UFW Int
 find p = do
-   parent <- gets _parent
-   if p /= parent ! p
-      then find (parent ! p)
+   parentOfP <- uses parent (! p)
+   if parentOfP /= p
+      then find parentOfP
       else return p
 
 connected :: Int -> Int -> UFW Bool
