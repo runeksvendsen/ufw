@@ -7,7 +7,8 @@ system-ghc: true
 
 docker:
   enable: true
-  image: tweag/linear-types
+  image: fpco/stack-build
+  #image: tweag/linear-types
 
 extra-deps:
 - lens-4.16
