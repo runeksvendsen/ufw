@@ -18,7 +18,7 @@ library:
   dependencies:
   - base >=4.7 && <5
   - mtl
-  - primitive
+  - array
 
 executables:
   ufw:

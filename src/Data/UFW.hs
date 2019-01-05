@@ -17,41 +17,27 @@ module Data.UFW
 where
 
 import Control.Monad
-import Data.Primitive.MutVar
-import Data.Primitive.Array
+import Data.STRef
+import Data.Array.ST
 import Control.Monad.ST
 import Control.Monad.Reader
-import Control.Monad.Primitive
 
 
 type UFW s = ReaderT (UFWState s) (ST s)
 
 data UFWState s = UFWState
-   { _parent :: MutableArray s Int
-   , _size   :: MutableArray s Int
-   , _count  :: MutVar s Word
+   { _parent :: STUArray s Int Int
+   , _size   :: STUArray s Int Int
+   , _count  :: STRef s Word
    }
 
 mkInitialState :: Word -> ST s (UFWState s)
 mkInitialState n = UFWState
-    <$> newListArray arraySize [0..arraySize-1]
-    <*> newListArray arraySize [0..arraySize-1]
-    <*> newMutVar n
+    <$> newListArray (0, arraySize-1) [0..arraySize-1]
+    <*> newListArray (0, arraySize-1) [0..arraySize-1]
+    <*> newSTRef n
   where
     arraySize = fromIntegral n
-    -- Same as 'Data.Array.MArray.newListArray'
-    newListArray :: (PrimMonad m, Integral v)
-                 => Int
-                 -> [v]
-                 -> m (MutableArray (PrimState m) v)
-    newListArray size values =
-        newArray (fromIntegral size) 0 >>=
-            \array -> initArray size values array >> return array
-    -- Initialize an array of the given size with the given values
-    initArray size values emptyArray =
-        foldM_ (\array (idx, val) -> writeArray array idx val >> return array)
-               emptyArray
-               (zip [0..size-1] values)
 
 runUFW :: Word -> (forall s. UFW s a) -> a
 runUFW n ufw = runST $ do
@@ -59,53 +45,49 @@ runUFW n ufw = runST $ do
     runReaderT ufw initState
 
 getCount :: UFW s Word
-getCount = ReaderT $ \state -> readMutVar (_count state)
+getCount = ReaderT $ \state -> readSTRef (_count state)
 
-withCount :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
-          => (Word -> Word)
-          -> m ()
+withCount :: (Word -> Word)
+          -> UFW s ()
 withCount f = do
     countRef <- asks _count
-    readMutVar countRef >>= \count -> writeMutVar countRef (f count)
+    lift $ readSTRef countRef >>= \count -> writeSTRef countRef (f count)
 
 arrayRead
-   :: (PrimMonad m, MonadReader r m)
-   => (r -> MutableArray (PrimState m) a) -- ^ Which array to read from
+   :: (UFWState s -> STUArray s Int Int)  -- ^ Which array to read from
    -> Int                                 -- ^ Array index to read
-   -> m a
-arrayRead arrayFn index =
-    (`readArray` index) =<< asks arrayFn
+   -> UFW s Int
+arrayRead arrayFn index = do
+    array <- asks arrayFn
+    lift $ readArray array index
 
 arrayWrite
-   :: (PrimMonad m, MonadReader r m)
-   => (r -> MutableArray (PrimState m) a) -- ^ Which array to write to
-   -> (Int, a)                            -- ^ (index, value) to write
-   -> m ()
-arrayWrite arrayFn (index, value) =
-    (\array -> writeArray array index value) =<< asks arrayFn
+   :: (UFWState s -> STUArray s Int Int)  -- ^ Which array to write to
+   -> (Int, Int)                          -- ^ (index, value) to write
+   -> UFW s ()
+arrayWrite arrayFn (index, value) = do
+    array <- asks arrayFn
+    lift $ writeArray array index value
 
-find :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
-     => Int
-     -> m Int
+find :: Int
+     -> UFW s Int
 find p = do
    parentOfP <- _parent `arrayRead` p
    if parentOfP /= p
       then find parentOfP
       else return p
 
-connected :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
-          => Int
+connected :: Int
           -> Int
-          -> m Bool
+          -> UFW s Bool
 connected p q = do
    rootP <- find p
    rootQ <- find q
    return $ rootP == rootQ
 
-union :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
-      => Int
+union :: Int
       -> Int
-      -> m ()
+      -> UFW s ()
 union p q = do
    rootP <- find p
    rootQ <- find q
