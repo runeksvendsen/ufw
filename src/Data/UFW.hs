@@ -1,66 +1,122 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
-module Data.UFW where
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-import qualified Data.Vector        as Vec
-import Data.Vector                  (Vector, (!), (//))
-import Control.Monad.State.Strict
-import Control.Lens.TH
-import Control.Lens.Setter
-import Control.Lens.Getter
+module Data.UFW
+( UFW
+, runUFW
+, connected
+, union
+, getCount
+)
+
+where
+
+import Control.Monad
+import Data.Primitive.MutVar
+import Data.Primitive.Array
+import Control.Monad.ST
+import Control.Monad.Reader
+import Control.Monad.Primitive
 
 
-data UFWState = UFWState
-   { _parent :: Vector Int
-   , _size   :: Vector Int
-   , _count  :: Int
+type UFW s = ReaderT (UFWState s) (ST s)
+
+data UFWState s = UFWState
+   { _parent :: MutableArray s Int
+   , _size   :: MutableArray s Int
+   , _count  :: MutVar s Word
    }
 
-$(makeLenses ''UFWState)
+mkInitialState :: Word -> ST s (UFWState s)
+mkInitialState n = UFWState
+    <$> newListArray arraySize [0..arraySize-1]
+    <*> newListArray arraySize [0..arraySize-1]
+    <*> newMutVar n
+  where
+    arraySize = fromIntegral n
+    -- Same as 'Data.Array.MArray.newListArray'
+    newListArray :: (PrimMonad m, Integral v)
+                 => Int
+                 -> [v]
+                 -> m (MutableArray (PrimState m) v)
+    newListArray size values =
+        newArray (fromIntegral size) 0 >>=
+            \array -> initArray size values array >> return array
+    -- Initialize an array of the given size with the given values
+    initArray size values emptyArray =
+        foldM_ (\array (idx, val) -> writeArray array idx val >> return array)
+               emptyArray
+               (zip [0..size-1] values)
 
-newtype UFW a = UFW { unwrapUFW :: State UFWState a }
-   deriving (Functor, Applicative, Monad, MonadState UFWState)
+runUFW :: Word -> (forall s. UFW s a) -> a
+runUFW n ufw = runST $ do
+    initState <- mkInitialState n
+    runReaderT ufw initState
 
-mkUFW :: Int -> UFWState
-mkUFW n = UFWState
-   { _parent = Vec.fromList [0..n-1]
-   , _size   = Vec.fromList [0..n-1]
-   , _count  = n
-   }
+getCount :: UFW s Word
+getCount = ReaderT $ \state -> readMutVar (_count state)
 
-runUFW :: Int -> UFW a -> a
-runUFW n ufw = retVal
-   where (retVal, _) = runState (unwrapUFW ufw) (mkUFW n)
+withCount :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
+          => (Word -> Word)
+          -> m ()
+withCount f = do
+    countRef <- asks _count
+    readMutVar countRef >>= \count -> writeMutVar countRef (f count)
 
-getCount :: UFW Int
-getCount = use count
+arrayRead
+   :: (PrimMonad m, MonadReader r m)
+   => (r -> MutableArray (PrimState m) a) -- ^ Which array to read from
+   -> Int                                 -- ^ Array index to read
+   -> m a
+arrayRead arrayFn index =
+    (`readArray` index) =<< asks arrayFn
 
-find :: Int -> UFW Int
+arrayWrite
+   :: (PrimMonad m, MonadReader r m)
+   => (r -> MutableArray (PrimState m) a) -- ^ Which array to write to
+   -> (Int, a)                            -- ^ (index, value) to write
+   -> m ()
+arrayWrite arrayFn (index, value) =
+    (\array -> writeArray array index value) =<< asks arrayFn
+
+find :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
+     => Int
+     -> m Int
 find p = do
-   parentOfP <- uses parent (! p)
+   parentOfP <- _parent `arrayRead` p
    if parentOfP /= p
       then find parentOfP
       else return p
 
-connected :: Int -> Int -> UFW Bool
+connected :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
+          => Int
+          -> Int
+          -> m Bool
 connected p q = do
    rootP <- find p
    rootQ <- find q
    return $ rootP == rootQ
 
-union :: Int -> Int -> UFW ()
+union :: (PrimMonad m, MonadReader (UFWState (PrimState m)) m)
+      => Int
+      -> Int
+      -> m ()
 union p q = do
    rootP <- find p
    rootQ <- find q
    unless (rootP == rootQ) $ do
-      qSize <- uses size (! rootQ)
-      pSize <- uses size (! rootP)
+      qSize <- _size `arrayRead` rootQ
+      pSize <- _size `arrayRead` rootP
       if pSize < qSize
          then do
-            parent %= (// [(rootP,rootQ)])
-            size   %= (// [(rootQ, pSize+qSize)])
+            _parent `arrayWrite` (rootP,rootQ)
+            _size   `arrayWrite` (rootQ, pSize+qSize)
          else do
-            parent %= (// [(rootQ,rootP)])
-            size   %= (// [(rootP, pSize+qSize)])
-      count %= subtract 1
+            _parent `arrayWrite` (rootQ,rootP)
+            _size   `arrayWrite` (rootP, pSize+qSize)
+      withCount (subtract 1)
