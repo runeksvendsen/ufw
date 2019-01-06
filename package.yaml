@@ -33,6 +33,7 @@ executables:
     dependencies:
     - base
     - ufw
+    - bytestring
 
 tests:
   ufw-test:
