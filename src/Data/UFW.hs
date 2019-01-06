@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Data.UFW
@@ -17,7 +18,8 @@ import Control.Monad.ST
 import Control.Monad.Reader
 
 
-type UFW s = ReaderT (UFWState s) (ST s)
+newtype UFW s a = UFW { unwrapUFW :: ReaderT (UFWState s) (ST s) a }
+   deriving (Functor, Applicative, Monad, MonadReader (UFWState s))
 
 data UFWState s = UFWState
    { _parent :: STUArray s Int Int
@@ -36,16 +38,16 @@ mkInitialState n = UFWState
 runUFW :: Word -> (forall s. UFW s a) -> a
 runUFW n ufw = runST $ do
     initState <- mkInitialState n
-    runReaderT ufw initState
+    runReaderT (unwrapUFW ufw) initState
 
 getCount :: UFW s Word
-getCount = ReaderT $ \state -> readSTRef (_count state)
+getCount = UFW . ReaderT $ \state -> readSTRef (_count state)
 
 withCount :: (Word -> Word)
           -> UFW s ()
 withCount f = do
     countRef <- asks _count
-    lift $ readSTRef countRef >>= \count -> writeSTRef countRef (f count)
+    UFW . lift $ readSTRef countRef >>= \count -> writeSTRef countRef (f count)
 
 arrayRead
    :: (UFWState s -> STUArray s Int Int)  -- ^ Which array to read from
@@ -53,7 +55,7 @@ arrayRead
    -> UFW s Int
 arrayRead arrayFn index = do
     array <- asks arrayFn
-    lift $ readArray array index
+    UFW . lift $ readArray array index
 
 arrayWrite
    :: (UFWState s -> STUArray s Int Int)  -- ^ Which array to write to
@@ -61,7 +63,7 @@ arrayWrite
    -> UFW s ()
 arrayWrite arrayFn (index, value) = do
     array <- asks arrayFn
-    lift $ writeArray array index value
+    UFW . lift $ writeArray array index value
 
 find :: Int
      -> UFW s Int
