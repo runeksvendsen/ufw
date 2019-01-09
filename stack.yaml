@@ -10,34 +10,6 @@ docker:
   image: tweag/linear-types
 
 extra-deps:
-- lens-4.16
-- mtl-2.2.1
-- vector-0.12.0.1
-- base-orphans-0.6
-- bifunctors-5.5.2
-- cabal-doctest-1.0.6
-- call-stack-0.1.0
-- comonad-5.0.3
-- contravariant-1.4.1
-- distributive-0.5.3
-- exceptions-0.8.3
-- free-5
-- hashable-1.2.6.1
-- kan-extensions-5.1
-- parallel-3.2.1.1
-- primitive-0.6.3.0
-- profunctors-5.2.2
-- reflection-2.1.3
-- semigroupoids-5.2.2
-- semigroups-0.18.4
-- tagged-0.8.5
-- text-1.2.3.0
-- th-abstraction-0.2.6.0
-- transformers-compat-0.5.1.4
-- unordered-containers-0.2.9.0
-- void-0.7.2
-- StateVar-1.1.0.4
-- adjunctions-4.4
-- fail-4.9.0.0
-- stm-2.4.5.0
-- transformers-base-0.4.4
+- mtl-2.2.2@sha256:1050fb71acd9f5d67da7d992583f5bd0eb14407b9dc7acc122af1b738b706ca3
+- vector-0.12.0.2@sha256:6a898f00b9850fb84836f187324fac1e64c998fb4eac290d4aa91b50a4c586f5
+- primitive-0.6.4.0@sha256:5b6a2c3cc70a35aabd4565fcb9bb1dd78fe2814a36e62428a9a1aae8c32441a1
