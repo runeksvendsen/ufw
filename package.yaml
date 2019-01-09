@@ -19,8 +19,6 @@ library:
   - base >=4.7 && <5
   - mtl
   - vector
-  - lens
-  - array
 
 executables:
   ufw:
@@ -33,6 +31,7 @@ executables:
     dependencies:
     - base
     - ufw
+    - bytestring
 
 tests:
   ufw-test:
