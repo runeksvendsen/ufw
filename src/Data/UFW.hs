@@ -1,12 +1,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE LinearTypes #-}
 module Data.UFW where
 
 import qualified Data.Vector        as Vec
 import Data.Vector                  (Vector, (!), (//))
 import Control.Monad.State.Strict
 
+
+-- 1,2,3 testing
+frugal :: a ⊸ (a,a)
+frugal a = (a,a)
 
 data UFWState = UFWState
    { _parent :: Vector Int
