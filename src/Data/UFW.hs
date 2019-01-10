@@ -7,6 +7,7 @@ module Data.UFW where
 import qualified Data.Vector        as Vec
 import Data.Vector                  (Vector, (!), (//))
 import Control.Monad.State.Strict
+import Data.List                    (iterate')
 
 
 data UFWState = UFWState
@@ -32,12 +33,20 @@ runUFW n ufw = retVal
 getCount :: UFW Int
 getCount = gets _count
 
+parentOf :: Int -> Vector Int -> Int
+parentOf p parrentArray =
+    getResult $ go `iterate'` p
+  where
+    go :: Int -> Int
+    go p' = parrentArray ! p'
+    getResult (p : ps) =
+         if p == head ps
+            then p
+            else getResult ps
+
+
 find :: Int -> UFW Int
-find p = do
-   parentOfP <- (! p) <$> gets _parent
-   if parentOfP /= p
-      then find parentOfP
-      else return p
+find p = parentOf p <$> gets _parent
 
 connected :: Int -> Int -> UFW Bool
 connected p q = do
