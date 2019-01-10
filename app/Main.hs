@@ -21,9 +21,6 @@ strLinePairs = map strIntPair . lines
 main :: IO ()
 main = do
    n <- readLn
-   interact $ \inputStr -> UFW.runUFW n $ do
-      forM_ (strLinePairs inputStr) $ \(p,q) -> do
-         isConnected <- UFW.connected p q
-         unless isConnected $ UFW.union p q
-      compCount <- UFW.getCount
-      return . pack $ show compCount ++ " components\n"
+   interact $ \inputStr ->
+      let compCount = UFW.numComponents n (strLinePairs inputStr)
+      in pack $ show compCount ++ " components\n"

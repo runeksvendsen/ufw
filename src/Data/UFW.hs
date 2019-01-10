@@ -2,14 +2,8 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Data.UFW
-( UFW
-, runUFW
-, connected
-, union
-, getCount
-)
-
-where
+( numComponents
+) where
 
 import Control.Monad
 import Data.STRef
@@ -17,6 +11,10 @@ import Data.Array.ST
 import Control.Monad.ST
 import Control.Monad.Reader
 
+
+numComponents :: Word -> [(Int,Int)] -> Word
+numComponents n unions =
+   runUFW n $ forM_ unions (uncurry union) >> getCount
 
 newtype UFW s a = UFW { unwrapUFW :: ReaderT (UFWState s) (ST s) a }
    deriving (Functor, Applicative, Monad, MonadFix, MonadReader (UFWState s))
