@@ -1,8 +1,12 @@
 packages:
 - .
+- location:
+    git: https://github.com/haskell/primitive.git
+    commit: 95b26974ac00b34eb397900c4dc60851c775fa76
+  extra-dep: true
 
-resolver: ghc-8.2
-compiler: ghc-8.2
+resolver: lts-13.2
+compiler: ghc-8.7
 system-ghc: true
 
 docker:
@@ -12,7 +16,6 @@ docker:
 extra-deps:
 - mtl-2.2.2@sha256:1050fb71acd9f5d67da7d992583f5bd0eb14407b9dc7acc122af1b738b706ca3
 - vector-0.12.0.2@sha256:6a898f00b9850fb84836f187324fac1e64c998fb4eac290d4aa91b50a4c586f5
-- primitive-0.6.4.0@sha256:5b6a2c3cc70a35aabd4565fcb9bb1dd78fe2814a36e62428a9a1aae8c32441a1
 ## Needed for "intero" (IDE plugin) ""
 - ghc-paths-0.1.0.9@sha256:ed18df7b53699446dabd66f6e019e5b156820f0301d8dec0d6385f13b797e0ba
 - network-2.8.0.0@sha256:aae171e6c6028a7791dbe4de5b9d2da398056359e3cc7927465ffa3cdae1aa0b

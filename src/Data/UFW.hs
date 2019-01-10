@@ -10,7 +10,7 @@ import Control.Monad.State.Strict
 
 
 -- 1,2,3 testing
-frugal :: a ⊸ (a,a)
+frugal :: a ->. (a,a)
 frugal a = (a,a)
 
 data UFWState = UFWState
