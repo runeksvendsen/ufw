@@ -14,7 +14,6 @@ import Data.STRef
 import Data.Array.ST
 import Control.Monad.ST
 import Control.Monad.Reader
-import Data.List                    (iterate')
 
 
 newtype UFW s a = UFW { unwrapUFW :: ReaderT (UFWState s) (ST s) a }
@@ -56,6 +55,13 @@ arrayRead arrayFn index = do
     array <- asks arrayFn
     UFW . lift $ readArray array index
 
+arrayWrite
+   :: (UFWState s -> STUArray s Int Int)  -- ^ Which array to write to
+   -> (Int, Int)                          -- ^ (index, value) to write
+   -> UFW s ()
+arrayWrite arrayFn (index, value) = do
+    array <- asks arrayFn
+    UFW . lift $ writeArray array index value
 
 find :: Int
      -> UFW s Int
@@ -64,23 +70,6 @@ find p = do
    if parentOfP /= p
       then find parentOfP
       else return p
-
-
-parentOf :: Int -> STUArray s Int Int -> Int
-parentOf p parrentArray =
-    getResult $ go `iterate'` p
-  where
-    go :: Int -> Int
-    go p' = parrentArray ! p'
-    getResult (p : ps) =
-         if p == head ps
-            then p
-            else getResult ps
-
-
-find :: Int -> UFW Int
-find p = parentOf p <$> gets _parent
-
 
 connected :: Int
           -> Int
