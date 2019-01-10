@@ -5,7 +5,7 @@ packages:
     commit: 95b26974ac00b34eb397900c4dc60851c775fa76
   extra-dep: true
 
-resolver: lts-13.2
+resolver: ghc-8.7
 compiler: ghc-8.7
 system-ghc: true
 
@@ -21,5 +21,3 @@ extra-deps:
 - network-2.8.0.0@sha256:aae171e6c6028a7791dbe4de5b9d2da398056359e3cc7927465ffa3cdae1aa0b
 - random-1.1@sha256:7b67624fd76ddf97c206de0801dc7e888097e9d572974be9b9ea6551d76965df
 - syb-0.7@sha256:9c559edeef6b9eb1362d7e16fbb15e786be871050cf085a46fcead282bb86e89
-## Test
-- QuickCheck-2.12.6.1
