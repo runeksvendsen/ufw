@@ -4,6 +4,10 @@ packages:
     git: https://github.com/haskell/primitive.git
     commit: 95b26974ac00b34eb397900c4dc60851c775fa76
   extra-dep: true
+- location:
+    git: https://github.com/tweag/linear-base.git
+    commit: 0d6165fbd8ad84dd1574a36071f00a6137351637
+  extra-dep: true
 
 resolver: ghc-8.7
 compiler: ghc-8.7
@@ -21,3 +25,10 @@ extra-deps:
 - network-2.8.0.0@sha256:aae171e6c6028a7791dbe4de5b9d2da398056359e3cc7927465ffa3cdae1aa0b
 - random-1.1@sha256:7b67624fd76ddf97c206de0801dc7e888097e9d572974be9b9ea6551d76965df
 - syb-0.7@sha256:9c559edeef6b9eb1362d7e16fbb15e786be871050cf085a46fcead282bb86e89
+## linear-base
+- storable-tuple-0.0.3.3@sha256:1096df92bed234a5dbd3d5b9632131c1b839787b20031c3e179e44493f5939d5
+- base-orphans-0.8@sha256:4885caa82ab94fa5cb841d6d06a43a97cdc7e835f346be4f11c1cc5707b886db
+- storable-record-0.0.4@sha256:099792dc2a458e8df284e1ae35179562192c76da6fcac33b90e6ef51ccd745ca
+- utility-ht-0.0.14@sha256:586b3253413423a6fb205dbba9c02ac6c3c9684f8466e32a8c25053bc6d1d2b0
+- semigroups-0.18.5@sha256:aaf0d3d5050aa120b2eb98682bc7f8aeed947c1eb51a80375f32775af3d2ff68
+
