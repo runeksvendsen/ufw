@@ -17,7 +17,7 @@ numComponents n unions =
    runUFW n $ forM_ unions (uncurry union) >> getCount
 
 newtype UFW s a = UFW { unwrapUFW :: ReaderT (UFWState s) (ST s) a }
-   deriving (Functor, Applicative, Monad, MonadFix, MonadReader (UFWState s))
+   deriving (Functor, Applicative, Monad, MonadReader (UFWState s))
 
 data UFWState s = UFWState
    { _parent :: STUArray s Int Int
@@ -65,14 +65,11 @@ arrayWrite arrayFn (index, value) = do
 
 find :: Int
      -> UFW s Int
-find p =
-    mfix go
-  where
-    go p = do
-        parent <- _parent `arrayRead` p
-        if p == parent
-           then return p
-           else go parent
+find p = do
+   parentOfP <- _parent `arrayRead` p
+   if parentOfP /= p
+      then find parentOfP
+      else return p
 
 connected :: Int
           -> Int
