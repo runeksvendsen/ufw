@@ -14,11 +14,13 @@ library:
   ghc-options:
   - -Wall
   exposed-modules:
-  - Data.UFW
+  - UFW
+  - UFW.Parse
   dependencies:
   - base >=4.7 && <5
   - mtl
   - array
+  - bytestring
 
 executables:
   ufw:
@@ -31,18 +33,3 @@ executables:
     dependencies:
     - base
     - ufw
-    - bytestring
-
-tests:
-  ufw-test:
-    main: Spec.hs
-    source-dirs: test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - base
-    - ufw
-    - hspec
-    - QuickCheck
