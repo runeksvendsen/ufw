@@ -45,7 +45,7 @@ withCount :: (Word -> Word)
           -> UFW s ()
 withCount f = do
     countRef <- asks _count
-    UFW . lift $ readSTRef countRef >>= \count -> writeSTRef countRef (f count)
+    UFW . lift $ modifySTRef countRef f
 
 arrayRead
    :: (UFWState s -> STUArray s Int Int)  -- ^ Which array to read from
